@@ -1,0 +1,43 @@
+{
+  "name": "flatToTrees",
+  "version": "0.1.0",
+  "description": "Utility to convert flat data into hierarchical data",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "patch": "npm version patch && git push --follow-tags && npm publish",
+    "minor": "npm version minor && git push --follow-tags && npm publish"
+  },
+  "author": "Charles Scalfani",
+  "license": "ISC",
+  "dependencies": {
+    "debug": "^2.2.0",
+    "is_js": "^0.8.0",
+    "ramda": "^0.21.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 6
+    },
+    "rules": {
+      "semi": [
+        "error",
+        "always",
+        {
+          "omitLastInOneLineBlock": true
+        }
+      ],
+      "no-unused-vars": [
+        "error",
+        {
+          "vars": "all",
+          "args": "after-used"
+        }
+      ]
+    }
+  }
+}
