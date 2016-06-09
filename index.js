@@ -4,7 +4,12 @@ const R = require('ramda');
 const debug = require('debug')('flatToTrees');
 const is = require('is_js');
 
-const inspect = obj => util.inspect(obj, {depth:null});
+// defer inspection until the toString is called by the debug module
+const inspect = obj => {
+	const f = obj => util.inspect(obj, {depth:null});
+	f.toString = () => f(obj);
+	return f;
+};
 const flatToTrees = (data, options) => {
 	options = options || {};
 	// set default options
@@ -52,24 +57,27 @@ const flatToTrees = (data, options) => {
 		}, R.keys(treeToMerge));
 		return tree;
 	};
-	const insertRecordIntoTree = (tree, record) => {
-		const recordTree = createTree(record);
-		debug('tree:', inspect(tree));
+	const insertRecordIntoTree = (tree, recordTree) => {
 		debug('treeToMerge:', inspect(recordTree));
 		const mergedTree = mergeArrays(tree, recordTree);
 		debug('mergedTree:', inspect(mergedTree));
 		return mergedTree;
 	};
 	// 2 trees are considered to be equivalent if their top-level non-array keys are equal, their array keys are both arrays and their are no extra keys in either
-	const equivalentTrees = (tree, tree2) => {
+	const equivalentTrees = (tree, existingTree) => {
+		// must have same keys
+		const keys = R.keys(tree);
+		const keys2 = R.keys(existingTree);
+		if (!R.equals(keys, keys2))
+			return false;
 		// use negative logic here to short-circuit on NOT equals
-		const eq = (tree, tree2) => !R.find(key => {
+		const eq = (tree, existingTree) => !R.find(key => {
 			if (is.array(tree[key]))
-				return !is.array(tree2[key]);
+				return !is.array(existingTree[key]);
 			else
-				return !R.equals(tree[key], tree2[key]);
+				return !R.equals(tree[key], existingTree[key]);
 		}, R.keys(tree));
-		return eq(tree, tree2) && eq(tree2, tree);
+		return eq(tree, existingTree);
 	};
 	const findExistingTree = (tree, trees) => R.find(existingTree => equivalentTrees(tree, existingTree), trees);
 	const trees = R.reduce((acc, record) => {
@@ -82,7 +90,7 @@ const flatToTrees = (data, options) => {
 		else {
 			const existingTree = findExistingTree(tree, acc);
 			debug('existingTree:', inspect(existingTree));
-			existingTree ? insertRecordIntoTree(existingTree, record) : acc[acc.length] = tree;
+			existingTree ? insertRecordIntoTree(existingTree, tree) : acc[acc.length] = tree;
 		}
 		return acc;
 	}, [], data);
